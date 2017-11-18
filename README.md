@@ -1,8 +1,7 @@
 # Steganography.jl
 
 [![Build Status](https://travis-ci.org/davidssmith/Steganography.jl.png?branch=master)](https://travis-ci.org/davidssmith/Steganography.jl)
-[![Build
-status](https://ci.appveyor.com/api/projects/status/8d0t2jm2c6ak69gy?svg=true)](https://ci.appveyor.com/project/davidssmith/steganography-jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/79t4agflnh4dni90/branch/master?svg=true)](https://ci.appveyor.com/api/projects/status/79t4agflnh4dni90/branch/master?svg=true) 
 [![Coverage
 Status](https://coveralls.io/repos/github/davidssmith/Steganography.jl/badge.svg?branch=master)](https://coveralls.io/github/davidssmith/Steganography.jl?branch=master)
 
