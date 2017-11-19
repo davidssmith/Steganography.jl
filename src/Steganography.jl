@@ -26,7 +26,8 @@
 
 module Steganography
 
-export embed, extract
+export embed, extract, setlastbits, getlastbits, setlast7, setlast8, 
+    getlast7, getlast8
 
 const version = v"0.0.1"
 
