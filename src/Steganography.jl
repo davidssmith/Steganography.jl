@@ -31,40 +31,26 @@ export embed, extract, setlastbits, getlastbits, setlast7, setlast8,
 
 const version = v"0.0.1"
 
-# steganography of single precision float arrays
-
-function setlast8{T}(x::T, n::UInt8)
-    i = reinterpret(Unsigned, x)
-    i = (i >> 8) << 8
-    i = i | n
-    reinterpret(T, i)
-end
-
-function setlast7{T}(x::T, n::UInt8)
-    i = reinterpret(Unsigned, x)
-    i = (i >> 7) << 7
-    i = i | (n & 0x7f)
-    reinterpret(T, i)
-end
-
-function setlastbits{T}(x::T, n::UInt8, nbits::UInt8)
-    i = reinterpret(Unsigned, x)
+function setlastbits{T<:Integer}(i::T, n::UInt8, nbits::UInt8)
     S = typeof(i)
-    i = (i >> nbits) << nbits
-    i = i | (n & ((S(1) << nbits) - S(1)))
-    reinterpret(T, i)
+    j = (i >> nbits) << nbits
+    j | (n & ((S(1) << nbits) - S(1)))
 end
+setlastbits{T<:AbstractFloat}(x::T, n::UInt8, nbits::UInt8) = reinterpret(T, setlastbits(reinterpret(Unsigned, x), n, nbits))
+setlast8{T}(x::T, n::UInt8) = setlastbits(x, n, UInt8(8))
+setlast7{T}(x::T, n::UInt8) = setlastbits(x, n, UInt8(7))
 
-getlast8{T}(x::T) = UInt8(reinterpret(Unsigned, x) & 0xff)
-getlast7{T}(x::T) = UInt8(reinterpret(Unsigned, x) & 0x7f)
-
-function getlastbits{T}(x::T, nbits::UInt8)
-    i = reinterpret(Unsigned, x)
+function getlastbits{T}(i::T, nbits::UInt8)
     S = typeof(i)
     return UInt8(i & ((S(1) << nbits) - S(1)))
 end
+getlastbits{T<:AbstractFloat}(x::T, nbits::UInt8) = getlastbits(reinterpret(Unsigned, x), nbits)
+getlast8{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0xff)
+getlast7{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0x7f)
+getlast8{T}(x::T) = UInt8(x & 0xff)
+getlast7{T}(x::T) = UInt8(x & 0x7f)
 
-function embed{N}(data::Array{Float32,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
+function embed{T,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
     @assert length(text) <= length(data)
     y = copy(data)   # make sure we have enough space
     for j in 1:length(text)
@@ -93,12 +79,13 @@ function embed{N}(data::Array{Complex64,N}, text::Array{UInt8,1}; ina::Bool=true
     reshape(y, d)
 end
 
-function extract{N}(data::Array{Float32,N})
-    s = reinterpret(UInt32, data)
+function extract{T<:Integer,N}(s::Array{T,N})
     s = UInt8.(s .& 0x7f)
     n = findfirst(x -> x == 0x04, s)
-    t[1:n-1]
+    s[1:n-1]
 end
+extract{N}(data::Array{Float32,N}) = extract(reinterpret(UInt32, data))
+extract{N}(data::Array{Float64,N}) = extract(reinterpret(UInt64, data))
 
 function extract{N}(data::Array{Complex64,N})
     d = size(data)
