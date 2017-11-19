@@ -6,8 +6,9 @@ using Steganography
 
 @testset "steganography" begin
     U = read("reliance.txt")
+    #println(join(Char.(U)))
     n = length(U)
-    @testset "$S in $T" for S in [UInt8], T in [Float32, Float64]
+    @testset "$S in $T" for S in [UInt8], T in [Int32, Int64, UInt32, UInt64, Float32, Float64]
         A = rand(T, n)
         for j in 1:n
             r = setlast8(A[j], U[j])
@@ -22,7 +23,10 @@ using Steganography
             @test U[j] == getlast8(r)
         end
         A = rand(T, n + 2)
-        V = extract(embed(A, U))
+        B = embed(A, U)
+        #println(B)
+        V = extract(B)
+        #println(join(Char.(V)))
         @test U == V
     end
 end
