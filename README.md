@@ -5,7 +5,6 @@
 [![Coverage
 Status](https://coveralls.io/repos/github/davidssmith/Steganography.jl/badge.svg?branch=master)](https://coveralls.io/github/davidssmith/Steganography.jl?branch=master)
 
-
 Introduction
 ------------
 Steganography methods for embedding text into the least significant bits of arbitrary data

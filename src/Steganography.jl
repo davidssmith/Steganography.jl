@@ -26,31 +26,33 @@
 
 module Steganography
 
+using Compat
+
 export embed, extract, setlastbits, getlastbits, setlast7, setlast8, 
     getlast7, getlast8
 
 const version = v"0.0.1"
 
-function setlastbits{T<:Integer}(i::T, n::UInt8, nbits::UInt8)
+@compat function setlastbits{T<:Integer}(i::T, n::UInt8, nbits::UInt8)
     S = typeof(i)
     j = (i >> nbits) << nbits
     j | (n & ((S(1) << nbits) - S(1)))
 end
-setlastbits{T<:AbstractFloat}(x::T, n::UInt8, nbits::UInt8) = reinterpret(T, setlastbits(reinterpret(Unsigned, x), n, nbits))
-setlast8{T}(x::T, n::UInt8) = setlastbits(x, n, UInt8(8))
-setlast7{T}(x::T, n::UInt8) = setlastbits(x, n, UInt8(7))
+@compat setlastbits{T<:AbstractFloat}(x::T, n::UInt8, nbits::UInt8) = reinterpret(T, setlastbits(reinterpret(Unsigned, x), n, nbits))
+@compat setlast8{T}(x::T, n::UInt8) = setlastbits(x, n, UInt8(8))
+@compat setlast7{T}(x::T, n::UInt8) = setlastbits(x, n, UInt8(7))
 
-function getlastbits{T}(i::T, nbits::UInt8)
+@compat function getlastbits{T}(i::T, nbits::UInt8)
     S = typeof(i)
     return UInt8(i & ((S(1) << nbits) - S(1)))
 end
-getlastbits{T<:AbstractFloat}(x::T, nbits::UInt8) = getlastbits(reinterpret(Unsigned, x), nbits)
-getlast8{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0xff)
-getlast7{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0x7f)
-getlast8{T}(x::T) = UInt8(x & 0xff)
-getlast7{T}(x::T) = UInt8(x & 0x7f)
+@compat getlastbits{T<:AbstractFloat}(x::T, nbits::UInt8) = getlastbits(reinterpret(Unsigned, x), nbits)
+@compat getlast8{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0xff)
+@compat getlast7{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0x7f)
+@compat getlast8{T}(x::T) = UInt8(x & 0xff)
+@compat getlast7{T}(x::T) = UInt8(x & 0x7f)
 
-function embed{T<:Real,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
+@compat function embed{T<:Real,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
     @assert length(text) <= length(data)
     y = copy(data)   # make sure we have enough space
     for j in 1:length(text)
@@ -71,14 +73,16 @@ function embed{T<:Real,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii
     y
 end
 
-function embed{N}(data::Array{Complex64,N}, text::Array{UInt8,1}; ina::Bool=true)
+# Need  embed(::Base.ReinterpretArray{Float32,1,Complex{Float32},Array{Complex{Float32},1}}, ::Array{UInt8,1}; ignorenonascii=true)
+
+@compat function embed{N}(data::Array{Complex64,N}, text::Array{UInt8,1}; ina::Bool=true)
     d = size(data)
     y = reinterpret(Float32, data[:])
     y = embed(y, text; ignorenonascii=ina)
     y = reinterpret(Complex64, y[:])
     reshape(y, d)
 end
-function embed{N}(data::Array{Complex128,N}, text::Array{UInt8,1}; ina::Bool=true)
+@compat function embed{N}(data::Array{Complex128,N}, text::Array{UInt8,1}; ina::Bool=true)
     d = size(data)
     y = reinterpret(Float64, data[:])
     y = embed(y, text; ignorenonascii=ina)
@@ -86,15 +90,17 @@ function embed{N}(data::Array{Complex128,N}, text::Array{UInt8,1}; ina::Bool=tru
     reshape(y, d)
 end
 
-function extract{T<:Integer,N}(s::Array{T,N})
+@compat function extract{T<:Integer,N}(s::Array{T,N})
     s = UInt8.(s .& 0x7f)
     n = findfirst(x -> x == 0x04, s)
     s[1:n-1]
 end
-extract{N}(x::Array{Float32,N}) = extract(reinterpret(UInt32, x))
-extract{N}(x::Array{Float64,N}) = extract(reinterpret(UInt64, x))
-extract{N}(x::Array{Complex64,N}) = extract(reinterpret(UInt32, x))
-extract{N}(x::Array{Complex128,N}) = extract(reinterpret(UInt64, x))
+# need extract(::Base.ReinterpretArray{UInt64,1,Float64,Array{Float64,1}})
+
+@compat extract{N}(x::Array{Float32,N}) = extract(reinterpret(UInt32, x))
+@compat extract{N}(x::Array{Float64,N}) = extract(reinterpret(UInt64, x))
+@compat extract{N}(x::Array{Complex64,N}) = extract(reinterpret(UInt32, x))
+@compat extract{N}(x::Array{Complex128,N}) = extract(reinterpret(UInt64, x))
 
 
 

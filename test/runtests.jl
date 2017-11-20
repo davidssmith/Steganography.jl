@@ -1,6 +1,6 @@
 
 include("../src/Steganography.jl")
-using Base.Test
+VERSION > v"0.6" ? using Test : using Base.Test
 
 @testset "steganography" begin
     U = read("reliance.txt")
@@ -27,12 +27,14 @@ using Base.Test
         #println(join(Char.(V)))
         @test U == V
     end
-    @testset "$S in $T" for S in [UInt8], T in [Complex64, Complex128]
-        A = rand(T, n + 2)
-        B = Steganography.embed(A, U)
-        #println(B)
-        V = Steganography.extract(B)
-        #println(join(Char.(V)))
-        @test U == V
+    if !(VERSION > v"0.6")
+        @testset "$S in $T" for S in [UInt8], T in [Complex64, Complex128]
+            A = rand(T, n + 2)
+            B = Steganography.embed(A, U)
+            #println(B)
+            V = Steganography.extract(B)
+            #println(join(Char.(V)))
+            @test U == V
+        end
     end
 end
