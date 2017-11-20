@@ -50,7 +50,7 @@ getlast7{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0x7f)
 getlast8{T}(x::T) = UInt8(x & 0xff)
 getlast7{T}(x::T) = UInt8(x & 0x7f)
 
-function embed{T,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
+function embed{T<:Real,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
     @assert length(text) <= length(data)
     y = copy(data)   # make sure we have enough space
     for j in 1:length(text)
@@ -78,24 +78,24 @@ function embed{N}(data::Array{Complex64,N}, text::Array{UInt8,1}; ina::Bool=true
     y = reinterpret(Complex64, y[:])
     reshape(y, d)
 end
+function embed{N}(data::Array{Complex128,N}, text::Array{UInt8,1}; ina::Bool=true)
+    d = size(data)
+    y = reinterpret(Float64, data[:])
+    y = embed(y, text; ignorenonascii=ina)
+    y = reinterpret(Complex128, y[:])
+    reshape(y, d)
+end
 
 function extract{T<:Integer,N}(s::Array{T,N})
     s = UInt8.(s .& 0x7f)
     n = findfirst(x -> x == 0x04, s)
     s[1:n-1]
 end
-extract{N}(data::Array{Float32,N}) = extract(reinterpret(UInt32, data))
-extract{N}(data::Array{Float64,N}) = extract(reinterpret(UInt64, data))
+extract{N}(x::Array{Float32,N}) = extract(reinterpret(UInt32, x))
+extract{N}(x::Array{Float64,N}) = extract(reinterpret(UInt64, x))
+extract{N}(x::Array{Complex64,N}) = extract(reinterpret(UInt32, x))
+extract{N}(x::Array{Complex128,N}) = extract(reinterpret(UInt64, x))
 
-function extract{N}(data::Array{Complex64,N})
-    d = size(data)
-    s = reinterpret(Float32, data[:])
-    s = reinterpret(UInt32, s)
-    s = UInt8.(s .& 0x7f)
-    n = findfirst(x -> x == 0x04, s)
-    println("found 0x04 at $n")
-    s[1:n-1]
-end
 
 
 end
