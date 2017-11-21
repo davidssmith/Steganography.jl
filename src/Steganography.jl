@@ -90,18 +90,21 @@ end
     reshape(y, d)
 end
 
-@compat function extract{T<:Integer,N}(s::Array{T,N})
-    s = UInt8.(s .& 0x7f)
-    n = findfirst(x -> x == 0x04, s)
-    s[1:n-1]
+@compat function extract{T,N}(s::Array{T,N})
+    t = Array{UInt8}(length(s))
+    k = 1
+    while true
+        t[k] = getlast7(s[k])
+        if t[k] == 0x04
+            break
+        end
+        k += 1
+    end
+    t[1:k-1]
 end
-# need extract(::Base.ReinterpretArray{UInt64,1,Float64,Array{Float64,1}})
 
-@compat extract{N}(x::Array{Float32,N}) = extract(reinterpret(UInt32, x))
-@compat extract{N}(x::Array{Float64,N}) = extract(reinterpret(UInt64, x))
-@compat extract{N}(x::Array{Complex64,N}) = extract(reinterpret(UInt32, x))
-@compat extract{N}(x::Array{Complex128,N}) = extract(reinterpret(UInt64, x))
-
+#extract(x::Base.ReinterpretArray{UInt64,1,Float64,Array{Float64,1}}) = extract
+#extract(x::Base.ReinterpretArray{UInt32,1,Float32,Array{Float32,1}})
 
 
 end

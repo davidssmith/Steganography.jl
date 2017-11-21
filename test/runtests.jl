@@ -1,6 +1,6 @@
 
 include("../src/Steganography.jl")
-VERSION > v"0.6" ? using Test : using Base.Test
+VERSION > v"0.7-" ? using Test : using Base.Test
 
 @testset "steganography" begin
     U = read("reliance.txt")
