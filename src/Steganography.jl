@@ -33,6 +33,30 @@ export embed, extract, setlastbits, getlastbits, setlast7, setlast8,
 
 const version = v"0.0.1"
 
+
+function flattencomplex{T<:Complex,N}(x::Array{T,N})
+    if sizeof(T) == 16
+        return reinterpret(Float64, x)
+    elseif sizeof(T) == 8
+        return reinterpret(Float32, x)
+    elseif sizeof(T) == 4
+        return reinterpret(Float16, x)
+    else
+        error("unhandled Complex type")
+    end
+end
+function unflattencomplex{T<:Real,N}(x::Array{T,N})
+    if sizeof(T) == 8 
+        return reinterpret(Complex128, x)
+    elseif sizeof(T) == 4
+        return reinterpret(Complex64, x)
+    elseif sizeof(T) == 2
+        return reinterpret(Complex32, x)
+    else
+        error("unhandled Complex type")
+    end
+end
+
 @compat function setlastbits{T<:Integer}(i::T, n::UInt8, nbits::UInt8)
     S = typeof(i)
     j = (i >> nbits) << nbits
@@ -47,12 +71,17 @@ end
     return UInt8(i & ((S(1) << nbits) - S(1)))
 end
 @compat getlastbits{T<:AbstractFloat}(x::T, nbits::UInt8) = getlastbits(reinterpret(Unsigned, x), nbits)
-@compat getlast8{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0xff)
-@compat getlast7{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0x7f)
-@compat getlast8{T}(x::T) = UInt8(x & 0xff)
-@compat getlast7{T}(x::T) = UInt8(x & 0x7f)
 
-@compat function embed{T<:Real,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
+@compat getlast8{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0xff)
+@compat getlast8{T}(x::T) = UInt8(x & 0xff)   # catch all
+
+@compat getlast7{T<:AbstractFloat}(x::T) = UInt8(reinterpret(Unsigned, x) & 0x7f)
+@compat getlast7{T}(x::T) = UInt8(x & 0x7f)   # catch all
+
+@compat function embed{T,N}(data::Array{T,N}, text::Array{UInt8,1}; ignorenonascii::Bool=true)
+    if T <: Complex
+        data = flattencomplex(data)
+    end
     @assert length(text) <= length(data)
     y = copy(data)   # make sure we have enough space
     for j in 1:length(text)
@@ -70,27 +99,17 @@ end
     if length(text) < length(data)
         y[length(text)+1] = setlast7(data[length(text)+1], 0x04) # ASCII 0x04 means 'end of transmission'
     end
-    y
-end
-
-# Need  embed(::Base.ReinterpretArray{Float32,1,Complex{Float32},Array{Complex{Float32},1}}, ::Array{UInt8,1}; ignorenonascii=true)
-
-@compat function embed{N}(data::Array{Complex64,N}, text::Array{UInt8,1}; ina::Bool=true)
-    d = size(data)
-    y = reinterpret(Float32, data[:])
-    y = embed(y, text; ignorenonascii=ina)
-    y = reinterpret(Complex64, y[:])
-    reshape(y, d)
-end
-@compat function embed{N}(data::Array{Complex128,N}, text::Array{UInt8,1}; ina::Bool=true)
-    d = size(data)
-    y = reinterpret(Float64, data[:])
-    y = embed(y, text; ignorenonascii=ina)
-    y = reinterpret(Complex128, y[:])
-    reshape(y, d)
+    if T <: Complex
+        return unflattencomplex(y)
+    else
+        return y
+    end
 end
 
 @compat function extract{T,N}(s::Array{T,N})
+    if T <: Complex
+        s = flattencomplex(s)
+   end
     t = Array{UInt8}(length(s))
     k = 1
     while true
@@ -102,9 +121,5 @@ end
     end
     t[1:k-1]
 end
-
-#extract(x::Base.ReinterpretArray{UInt64,1,Float64,Array{Float64,1}}) = extract
-#extract(x::Base.ReinterpretArray{UInt32,1,Float32,Array{Float32,1}})
-
 
 end
