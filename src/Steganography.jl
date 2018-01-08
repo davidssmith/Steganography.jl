@@ -35,26 +35,37 @@ const version = v"0.0.1"
 
 
 function flattencomplex{T<:Complex,N}(x::Array{T,N})
-    if sizeof(T) == 16
-        return reinterpret(Float64, x)
-    elseif sizeof(T) == 8
-        return reinterpret(Float32, x)
-    elseif sizeof(T) == 4
-        return reinterpret(Float16, x)
+    if T == Complex128
+        T2 = Float64
+    elseif T == Complex64
+        T2 = Float32
+    elseif T == Complex32
+        T2 = Float16
     else
         error("unhandled Complex type")
     end
+    y = Array{T2}(2length(x))
+    for k in 1:length(x)
+        y[2k-1] = real(x[k])
+        y[2k] = imag(x[k])
+    end
+    return y
 end
-function unflattencomplex{T<:Real,N}(x::Array{T,N})
-    if sizeof(T) == 8 
-        return reinterpret(Complex128, x)
-    elseif sizeof(T) == 4
-        return reinterpret(Complex64, x)
-    elseif sizeof(T) == 2
-        return reinterpret(Complex32, x)
+function unflattencomplex{T<:Real,N}(y::Array{T,N})
+    if T == Float64
+        T2 = Complex128
+    elseif T == Float32
+        T2 = Complex64
+    elseif T == Float16
+        T2 = Complex32
     else
         error("unhandled Complex type")
     end
+    x = Array{T2}(div(length(y),2))
+    for k in 1:length(x)
+        x[k] = complex(y[2k-1],y[2k])
+    end
+    return x
 end
 
 @compat function setlastbits{T<:Integer}(i::T, n::UInt8, nbits::UInt8)
