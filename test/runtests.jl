@@ -5,7 +5,8 @@ VERSION > v"0.7-" ? using Test : using Base.Test
 @testset "steganography" begin
     U = read("reliance.txt")
     n = length(U)
-    @testset "$S in $T" for S in [UInt8], T in [Int32, Int64, UInt32, UInt64, Float32, Float64]
+    @testset "$S in $T" for S in [UInt8], T in [Int32, Int64, UInt32, UInt64, 
+        Float16, Float32, Float64]
         A = rand(T, n)
         for j in 1:n
             r = Steganography.setlast8(A[j], U[j])
@@ -24,7 +25,7 @@ VERSION > v"0.7-" ? using Test : using Base.Test
         V = Steganography.extract(B)
         @test U == V
     end
-    @testset "$S in $T" for S in [UInt8], T in [Complex64, Complex128]
+    @testset "$S in $T" for S in [UInt8], T in [Complex32, Complex64, Complex128]
         A = rand(T, n + 2)
         B = Steganography.embed(A, U)
         V = Steganography.extract(B)
