@@ -42,7 +42,7 @@ function flattencomplex{T<:Complex,N}(x::Array{T,N})
     elseif T == Complex32
         T2 = Float16
     else
-        error("unhandled Complex type")
+        error("type $T unhandled in Steganography.flattencomplex()")
     end
     y = Array{T2}(2length(x))
     for k in 1:length(x)
@@ -59,7 +59,7 @@ function unflattencomplex{T<:Real,N}(y::Array{T,N})
     elseif T == Float16
         T2 = Complex32
     else
-        error("unhandled Complex type")
+        error("type $T unhandled in Steganography.unflattencomplex()")
     end
     x = Array{T2}(div(length(y),2))
     for k in 1:length(x)
