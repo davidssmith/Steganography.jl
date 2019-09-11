@@ -31,7 +31,7 @@ using Compat
 export embed, extract, setlastbits, getlastbits, setlast7, setlast8, 
     getlast7, getlast8
 
-const version = v"0.0.1"
+const version = v"0.0.2"
 
 
 function flattencomplex{T<:Complex,N}(x::Array{T,N})
