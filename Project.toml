@@ -1,0 +1,14 @@
+name = "Steganography"
+uuid = "b36d76f3-e888-5fd0-8dd3-e39a55b413c6"
+
+[deps]
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+
+[compat]
+julia = "≥ 0.6.1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
